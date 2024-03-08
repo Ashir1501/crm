@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<main>
+  <div class="container-fluid px-4">
+    <h1 class="mt-4">My Activity</h1>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Statistics</h5>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="card border-warning mb-3">
+              <div class="card-header">Pending Deals</div>
+              <div class="card-body warning">
+                <h5 class="card-title">{{ pending_deals }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-danger mb-3">
+              <div class="card-header">Deals Lost</div>
+              <div class="card-body text-danger">
+                <h5 class="card-title">{{ lost_deals }}/{{ total_deals }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-success mb-3">
+              <div class="card-header">Successfully Completed Deals</div>
+              <div class="card-body text-success">
+                <h5 class="card-title">{{ success_deals }}/{{ total_deals }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-info mb-3">
+              <div class="card-header">Ongoing Deals</div>
+              <div class="card-body text-info">
+                <h5 class="card-title">{{ ongoing_deals }}/{{ total_deals }}</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card border-success mb-3">
+              <div class="card-header">Total Earnings</div>
+              <div class="card-body text-success">
+                <h5 class="card-title">&#8377;{{ total_earnings }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card border-info mb-3">
+              <div class="card-header">Task Completion Rate</div>
+              <div class="card-body text-info">
+                <h5 class="card-title">{{ completed_task }}/{{ total_task }}</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+      <div class="row">
+        <div class="col-md-3 bg-dark text-white p-3">Upcomming Task</div>
+        <div class="col-md-2 bg-dark text-white p-3">Due Date</div>
+        <div class="col-md-3 bg-dark text-white p-3">Deal</div>
+        <div class="col-md-3 bg-dark text-white p-3">Customer</div>
+        <div class="col-md-1 bg-dark text-white p-3"></div>
+      </div>
+      {% if upcomming_task %}
+      {% for task in upcomming_task %}
+      <div class="row">
+        <div class="col-md-3 bg-primary text-black p-3">{{ task.task_title }}</div>
+        <div class="col-md-2 bg-primary text-black p-3">{{ task.task_dueDate }}</div>
+        <div class="col-md-3 bg-primary text-black p-3">{{ task.task_relatedToDeal }}</div>
+        <div class="col-md-3 bg-primary text-black p-3">{{ task.task_relatedToDeal.deal_withCustomer.customer_name }}</div>
+        <div class="col-md-1 bg-primary text-black p-3"><a href="{% url 'dealtask' pk=task.task_relatedToDeal.pk %}"><button
+          class="btn btn-info btn-block">Info</button></a></div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="row">
+        <div class="col-md-12 bg-primary text-black p-3">No Task </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+      <div class="row">
+        <div class="col-md-3 bg-dark text-white p-3">Recent Interaction</div>
+        <div class="col-md-3 bg-dark text-white p-3">Time</div>
+        <div class="col-md-3 bg-dark text-white p-3">customer</div>
+        <div class="col-md-3 bg-dark text-white p-3"></div>
+      </div>
+      {% if latest_interaction %}
+      <div class="row">
+        <div class="col-md-3 bg-primary text-black p-3">{{ latest_interaction.interacted_mode }}</div>
+        <div class="col-md-3 bg-primary text-black p-3">{{ latest_interaction.interacted_time }}</div>
+        <div class="col-md-3 bg-primary text-black p-3">{{ latest_interaction.interacted_customer }}</div>
+        <div class="col-md-3 bg-primary text-black p-3"><a class="btn btn-info" href="{% url 'customerDetail' pk=latest_interaction.interacted_customer.pk %}" role="button">Info</a></div>
+      </div>
+      {% else %}
+      <div class="row">
+        <div class="col-md-12 bg-primary text-black p-3">No Interaction</div>
+      </div>
+      {% endif %}
+    </div>
+    <form id="filterForm" class="mt-4">
+      <label for="year">Choose a year:</label>
+      <select name="year" id="year"></select>
+      <input type="submit" value="Load" name="_load">
+    </form>
+    <div class="row">
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-bar me-1"></i>
+            Pie Chart
+          </div>
+          <div class="card-body"><canvas id="taskStatusChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-bar me-1"></i>
+            Pie Chart
+          </div>
+          <div class="card-body"><canvas id="dealStatusChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-8" style="margin: auto;">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            Bar Chart
+          </div>
+          <div class="card-body"><canvas id="dealsChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+  $(document).ready(function () {
+    let taskStatusctx = document.getElementById("taskStatusChart").getContext("2d");
+    let taskStatusChart = new Chart(taskStatusctx, {
+      type: "pie",
+      data: {
+        labels: [],
+        datasets: [],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        aspectRatio: 1,
+        plugins:{
+          title: {
+            display: false,
+            text: ""
+          },
+        },
+        layout: {
+          padding: {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 25
+          }
+        }
+      }
+    });
+
+    let dealsCtx = document.getElementById("dealsChart").getContext("2d");
+    let dealsChart = new Chart(dealsCtx, {
+      type: "bar",
+      data: {
+        labels: [],
+        datasets: [],
+      },
+      options: {
+        responsive: true,
+        plugins:{
+          title: {
+            display: false,
+            text: ""
+          }
+        }
+      }
+    });
+
+    let dealStatusCtx = document.getElementById("dealStatusChart").getContext("2d");
+    let dealStatusChart = new Chart(dealStatusCtx, {
+      type: "pie",
+      data: {
+        labels: [],
+        datasets: [],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        aspectRatio: 1,
+        plugins:{
+          title: {
+            display: false,
+            text: ""
+          },
+        },
+        layout: {
+          padding: {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 25
+          }
+        }
+      }
+    });
+
+    $.ajax({
+      url: "{% url 'chart-filter-options' %}",
+      type: "GET",
+      dataType: "json",
+      success: (jsonResponse) => {
+        // Load all the options
+        jsonResponse.options.forEach(option => {
+          $("#year").append(new Option(option, option));
+        });
+        // Load data for the first option
+        loadAllCharts($("#year").children().first().val());
+      },
+      error: () => console.log("Failed to fetch chart filter options!")
+    });
+
+
+    $("#filterForm").on("submit", (event) => {
+      event.preventDefault();
+
+      const year = $("#year").val();
+      loadAllCharts(year)
+    });
+
+    function loadChart(chart, endpoint) {
+      $.ajax({
+        url: endpoint,
+        type: "GET",
+        dataType: "json",
+        success: (jsonResponse) => {
+          // Extract data from the response
+          const title = jsonResponse.title;
+          const labels = jsonResponse.data.labels;
+          const datasets = jsonResponse.data.datasets;
+
+
+          // Reset the current chart
+          chart.data.datasets = [];
+          chart.data.labels = [];
+
+          // Load new data into the chart
+          chart.options.plugins.title.text = title;
+          chart.options.plugins.title.display = true;
+          chart.data.labels = labels;
+          datasets.forEach(dataset => {
+            chart.data.datasets.push(dataset);
+          });
+          chart.update();
+        },
+        error: () => console.log("Failed to fetch chart data from " + endpoint + "!")
+      });
+    }
+
+    function loadAllCharts(year) {
+      yearInt = parseInt(year);
+      loadChart(dealsChart, `{% url 'dealManager' year=0 %}`.replace('0', yearInt));
+      loadChart(taskStatusChart, `{% url 'taskStatus' year=0 %}`.replace('0', yearInt));
+      loadChart(dealStatusChart, `{% url 'dealStatus' year=0 %}`.replace('0', yearInt));
+    }
+
+  });
+</script>
+{% endblock %}

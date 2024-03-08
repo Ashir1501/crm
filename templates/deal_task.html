@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<main">
+    <div class="container-fluid px-4">
+        {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+            {% if message.tags == 'error' %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                </button>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        <h1 class="mt-4">Deal & Tasks</h1>
+
+        <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Title</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ deal.deal_title }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Amount</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ deal.deal_amount }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Status</div>
+                <div class="col-md-6 bg-dark text-white p-3"><span style="display: inline-block; margin-right: 2%;">{{ deal.deal_status }}</span> <a class="btn btn-info"
+                        onclick="updateDeal()" href="#id_update_deal_status" role="button">Update</a></div>
+            </div>
+            <div class="container" style="display: none;" id="id_update_deal_status">
+                <div class="row justify-content-center">
+                    <div class="col-lg-7">
+                        <div class="card shadow-lg border-0 rounded-lg mt-5">
+                            <div class="card-header">
+                                <h3 class="text-center font-weight-light my-4">Update Deal Status</h3>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" action="{% url 'udealstatus' pk=deal.pk %}">
+                                    {% csrf_token %}
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
+                                                <select name="update_deal_status">
+                                                    <option value="Open">Open</option>
+                                                    <option value="Lost">Lost</option>
+                                                    <option value="Closed">Closed</option>
+                                                </select>
+                                            </button>
+                                            <button type="submit" class="btn btn-primary btn-block">Update</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Initiation Date</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ deal.deal_initiationDate }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Expected Close Date</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ deal.deal_expectedCloseDate }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Customer</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ deal.deal_withCustomer }}</div>
+            </div>
+        </div>
+
+        <div class="card mb-4" style="margin: 5%;">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Task List
+            </div>
+            <div class="card-body">
+                <table id="datatablesSimple">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Due Date</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Update Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                            <td>{{ task.task_title }}</td>
+                            <td>{{ task.task_dueDate }}</td>
+                            <td>{{ task.task_description }}</td>
+                            <td>{{ task.task_status }}</td>
+                            <td><a class="btn btn-info" href="{% url 'utaskstatus' pk=task.pk %}" role="button">Update</a></td>
+                            <td><a href="{% url 'delete_task' pk=task.pk %}"><button class="btn btn-danger btn-block">Delete Task</button></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="container" id="toggblock" style="display: none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div class="card shadow-lg border-0 rounded-lg mt-5">
+                        <div class="card-header">
+                            <h3 class="text-center font-weight-light my-4">Task</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{% url 'dealtask' pk=deal.pk %}" id="TaskForm">
+                                {% csrf_token %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p><label>Title</label></p>
+                                        <div class="form-floating">
+                                            <input type="text" id="title" name="title" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><label>Due Date</label></p>
+                                        <div class="form-floating">
+                                            <input type="date" id="datetime" name="duedate" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p><label>Status</label></p>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
+                                            <select name="task_status">
+                                                <option value="Open">Open</option>
+                                                <option value="Wait">Wait</option>
+                                                <option value="Closed">Closed</option>
+                                            </select>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Description</span>
+                                        <textarea class="form-control" name="description"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 mb-0">
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-block">Create</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: inline-block;">
+            <a href="#toggblock"><button onclick="Block()" class="btn btn-secondary btn-block">Add
+                    Task</button></a>
+            <a href="{% url 'delete_deal' pk=deal.pk %}"><button class="btn btn-danger btn-block">Delete Deal</button></a>
+        </div>
+    </div>
+</main>
+<script>
+    function Block() {
+        let x = document.getElementById("toggblock");
+        if (x.style.display === "none") {
+            x.style.display = "block";
+        } else {
+            x.style.display = "none";
+        }
+    }
+
+    function updateDeal() {
+        let x = document.getElementById("id_update_deal_status")
+        if (x.style.display === "none") {
+            x.style.display = "block";
+        } else {
+            x.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}

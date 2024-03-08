@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<main>
+    <div class="container">
+        <div class="row justify-content-center">
+            {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                {% if message.tags == 'error' %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>{{ message }}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    </button>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="col-lg-7">
+                <div class="card shadow-lg border-0 rounded-lg mt-5">
+                    <div class="card-header">
+                        <h3 class="text-center font-weight-light my-4">Assign Manager to Customer</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{% url 'assigner' %}">
+                            {% csrf_token %}
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p><label>Customer</label></p>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
+                                        <select id="id_customer" name="customer">
+                                            <option value="">select</option>
+                                            {% for customer in customers %}
+                                            <option value="{{ customer }}">{{ customer }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><label>Manager</label></p>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
+                                        <select id="id_manager" name="manager">
+                                            {% for manager in manager_users %}
+                                            <option value="{{ manager }}">{{ manager }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-4 mb-0">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-block">Assign</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

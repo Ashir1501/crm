@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+
+<main>
+    <div class="container-fluid px-4">
+        {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+            {% if message.tags == 'error' %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                </button>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        <h1 class="mt-4">Customer Detail</h1>
+
+        <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Name</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ customer_detail.customer_name }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Email</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ customer_detail.customer_email }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Phone</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ customer_detail.customer_phone }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Arrived At</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ customer_detail.arrived_date }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Company</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ customer_detail.customer_company }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 bg-primary text-black p-3">Notes</div>
+                <div class="col-md-6 bg-dark text-white p-3">{{ customer_detail.customer_notes }}</div>
+            </div>
+        </div>
+
+        {% if user.groups.all.0.name == 'normal' %}
+        <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+            <div class="row">
+                <div class="col-md-6 bg-dark text-white p-3">Deal Title</div>
+                <div class="col-md-6 bg-dark text-white p-3">Deal Status</div>
+            </div>
+            {% if deal %}
+            {% for dl in deal %}
+            <div class="row">
+                <div class="col-md-6 bg-secondary text-white p-3">{{ dl.deal_title }}</div>
+                <div class="col-md-6 bg-primary text-white p-3">{{ dl.deal_status }}</div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="row">
+                <div class="col-md-12 bg-secondary text-white p-3">No Deals present at the moment</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if user.groups.all.0.name == 'manager' or user.is_superuser %}
+        <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+            <div class="row">
+                <div class="col-md-6 bg-dark text-white p-3">Deal Title</div>
+                <div class="col-md-3 bg-dark text-white p-3">Deal Status</div>
+                <div class="col-md-3 bg-dark text-white p-3">More Info</div>
+            </div>
+            {% if deal %}
+            {% for dl in deal %}
+            <div class="row">
+                <div class="col-md-6 bg-secondary text-white p-3">{{ dl.deal_title }}</div>
+                <div class="col-md-3 bg-primary text-white p-3">{{ dl.deal_status }}</div>
+                <div class="col-md-3 bg-dark text-white p-3"><a href="{% url 'dealtask' pk=dl.pk %}"><button
+                            class="btn btn-info btn-block">Info</button></a></div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="row">
+                <div class="col-md-12 bg-secondary text-white p-3">No Deals present at the moment</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="card mb-4" style="margin: 5%;">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Interaction History
+            </div>
+            <div class="card-body">
+                <table id="datatablesSimple">
+                    <thead>
+                        <tr>
+                            <th>Mode</th>
+                            <th>Date & Time</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for interaction in interactions %}
+                        <tr>
+                            <td>{{ interaction.interacted_mode }}</td>
+                            <td>{{ interaction.interacted_time }}</td>
+                            <td>{{ interaction.interaction_notes }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if user.groups.all.0.name == 'normal' %}
+        <div class="container" id="toggblockInteraction" style="display: none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div id="success"></div>
+                    <div class="card shadow-lg border-0 rounded-lg mt-5">
+                        <div class="card-header">
+                            <h3 class="text-center font-weight-light my-4">Add interaction</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{% url 'customerDetail' pk=customer_detail.pk %}"
+                                id="InteractionForm">
+                                {% csrf_token %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p><label>Mode of Interaction</label></p>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
+                                            <select id="id_interacted_mode" name="interacted_mode">
+                                                <option value="Email">Email</option>
+                                                <option value="Call">Call</option>
+                                                <option value="Meeting">Meeting</option>
+                                            </select>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><label>Interacted Time</label></p>
+                                        <div class="form-floating">
+                                            <input type="datetime-local" id="datetime" name="datetime" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Notes</span>
+                                        <textarea class="form-control" name="notes"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 mb-0">
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-block">Add</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: inline-block;">
+            <a href="#toggblockInteraction"><button onclick="BlockInteraction()" class="btn btn-secondary btn-block">Add
+                    Interaction</button></a>
+        </div>
+        {% endif %}
+        {% if user.groups.all.0.name == 'manager' or user.is_superuser %}
+        <div class="container" id="toggblockDeal" style="display: none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div id="success"></div>
+                    <div class="card shadow-lg border-0 rounded-lg mt-5">
+                        <div class="card-header">
+                            <h3 class="text-center font-weight-light my-4">Create Deal</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{% url 'customerDetail' pk=customer_detail.pk %}" id="DealForm">
+                                {% csrf_token %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p><label>Title</label></p>
+                                        <div class="form-floating">
+                                            <input type="text" id="title" name="title" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><label>Amount</label></p>
+                                        <div class="form-floating">
+                                            <input type="number" id="amount" name="amount" required min="100">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <p><label>Initiation Date</label></p>
+                                        <div class="form-floating">
+                                            <input type="date" id="initiationDate" name="initiationDate" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><label>Expected Close Date</label></p>
+                                        <div class="form-floating">
+                                            <input type="date" id="closeDate" name="closeDate" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><label>Deal Status</label></p>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
+                                            <select id="id_deal_status" name="dealstatus">
+                                                <option value="Open">Open</option>
+                                                <option value="Lost">Lost</option>
+                                                <option value="Closed">Closed</option>
+                                            </select>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-4 mb-0">
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-block">Create</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: inline-block;">
+            <a href="#toggblockDeal"><button onclick="BlockDeal()" class="btn btn-secondary btn-block">Create Deal</button></a>
+        </div>
+        {% endif %}
+
+        {% if user.is_superuser %}
+        <div style="display: inline-block;">
+            <a href="{% url 'delete_customer' pk=customer_detail.pk %}"><button class="btn btn-danger btn-block">Delete Customer</button></a>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+<script>
+    function BlockInteraction() {
+        let x = document.getElementById("toggblockInteraction");
+        if (x.style.display === "none") {
+            x.style.display = "block";
+        } else {
+            x.style.display = "none";
+        }
+    }
+    function BlockDeal() {
+        let x = document.getElementById("toggblockDeal");
+        if (x.style.display === "none") {
+            x.style.display = "block";
+        } else {
+            x.style.display = "none";
+        }
+    }
+</script>
+
+{% endblock %}

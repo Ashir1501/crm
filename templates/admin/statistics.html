@@ -1,0 +1,377 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<main>
+  <div class="container-fluid px-4">
+    <div class="card mt-5">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="card border-primary mb-3">
+              <div class="card-header">Customers</div>
+              <div class="card-body text-primary">
+                <h5 class="card-title" style="color: black;">{{ customers }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-info mb-3">
+              <div class="card-header">Total Earnings</div>
+              <div class="card-body text-info">
+                <h5 class="card-title" style="color: black;">&#8377;{{ earnings }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-success mb-3">
+              <div class="card-header">Successfully completed Deals</div>
+              <div class="card-body text-success">
+                <h5 class="card-title" style="color: black;">{{ successfullDeals }}/{{ deals }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-info mb-3">
+              <div class="card-header">Task completion rate</div>
+              <div class="card-body text-info">
+                <h5 class="card-title" style="color: black;">{{ completedTask }}/{{ tasks }}</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+      <div class="row">
+        <div class="col-md-3 bg-dark text-white p-3">Upcomming Task</div>
+        <div class="col-md-3 bg-dark text-white p-3">Due Date</div>
+        <div class="col-md-3 bg-dark text-white p-3">Deal</div>
+        <div class="col-md-3 bg-dark text-white p-3">Customer</div>
+      </div>
+      {% if upcomming_task %}
+      {% for task in upcomming_task %}
+      <div class="row">
+        <div class="col-md-3 bg-primary text-black p-3">{{ task.task_title }}</div>
+        <div class="col-md-3 bg-primary text-black p-3">{{ task.task_dueDate }}</div>
+        <div class="col-md-3 bg-primary text-black p-3">{{ task.task_relatedToDeal }}</div>
+        <div class="col-md-3 bg-primary text-black p-3">{{ task.task_relatedToDeal.deal_withCustomer.customer_name }}
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="row">
+        <div class="col-md-12 bg-primary text-black p-3">No Task </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
+      <div class="row">
+        <div class="col-md-4 bg-dark text-white p-3">Recent Interaction</div>
+        <div class="col-md-4 bg-dark text-white p-3">Time</div>
+        <div class="col-md-4 bg-dark text-white p-3">customer</div>
+      </div>
+      {% if latest_interaction %}
+      <div class="row">
+        <div class="col-md-4 bg-primary text-black p-3">{{ latest_interaction.interacted_mode }}</div>
+        <div class="col-md-4 bg-primary text-black p-3">{{ latest_interaction.interacted_time }}</div>
+        <div class="col-md-4 bg-primary text-black p-3">{{ latest_interaction.interacted_customer }}</div>
+      {% else %}
+      <div class="row">
+        <div class="col-md-12 bg-primary text-black p-3">No Interaction</div>
+      </div>
+      {% endif %}
+    </div>
+    <form id="filterForm" class="mt-4">
+      <label for="year">Choose a year:</label>
+      <select name="year" id="year"></select>
+      <input type="submit" value="Load" name="_load">
+    </form>
+    <div class="row">
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-bar me-1"></i>
+            Pie Chart
+          </div>
+          <div class="card-body"><canvas id="dealStatusChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-bar me-1"></i>
+            Pie Chart
+          </div>
+          <div class="card-body"><canvas id="taskStatusChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            Bar Chart
+          </div>
+          <div class="card-body"><canvas id="dealsChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            Bar Chart
+          </div>
+          <div class="card-body"><canvas id="customersRegistered"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-8" style="margin: auto;">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            Line Chart
+          </div>
+          <div class="card-body"><canvas id="averageDealAmountChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-10" style="margin: auto;">
+        <div class="card mb-4">
+          <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            Radar Chart
+          </div>
+          <div class="card-body"><canvas id="allCustomers"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+<script>
+  $(document).ready(function () {
+
+    let allCustomerCtx = document.getElementById("allCustomers").getContext("2d");
+    let allCustomerChart = new Chart(allCustomerCtx, {
+      type: 'radar',
+      data: {
+        labels: [],
+        datasets: [],
+      },
+      options: {
+        scales:{
+          r:{
+            pointLabels:{
+              font:{
+                size:20
+              }
+            }
+          }
+        },
+        responsive: true,
+        plugins: {
+          title: {
+            display: false,
+            text: "",
+          },
+        },
+        elements: {
+          line: {
+            borderWidth: 3
+          }
+        }
+      },
+    });
+
+  
+    let dealsCtx = document.getElementById("dealsChart").getContext("2d");
+    let dealsChart = new Chart(dealsCtx, {
+      type: "bar",
+      data: {
+        labels: [],
+        datasets: [],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: false,
+            text: ""
+          }
+        },
+      }
+    });
+
+    let customersRegisteredCtx = document.getElementById("customersRegistered").getContext("2d");
+    let customersRegisteredChart = new Chart(customersRegisteredCtx, {
+      type: "bar",
+      data: {
+        labels: [],
+        datasets: [],
+      },
+      options: {
+        responsive: true,
+        indexAxis: 'y',
+        plugins: {
+          title: {
+            display: false,
+            text: ""
+          }
+        },
+      }
+    });
+
+    let averageDealAmountctx = document.getElementById("averageDealAmountChart").getContext("2d");
+    let averageDealAmountChart = new Chart(averageDealAmountctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [],
+      },
+      options: {
+        responsive: true,
+        title: {
+          display: false,
+          text: ""
+        },
+        animations: {
+          tension: {
+            duration: 1000,
+            easing: 'linear',
+            from: 1,
+            to: 0,
+            loop: true
+          }
+        },
+      },
+    });
+
+  let dealStatusCtx = document.getElementById("dealStatusChart").getContext("2d");
+  let dealStatusChart = new Chart(dealStatusCtx, {
+    type: "pie",
+    data: {
+      labels: [],
+      datasets: [],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      aspectRatio: 1,
+      plugins: {
+        title: {
+          display: false,
+          text: ""
+        }
+      },
+      layout: {
+        padding: {
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 25
+        }
+      }
+    }
+  });
+
+  let taskStatusCtx = document.getElementById("taskStatusChart").getContext("2d");
+  let taskStatusChart = new Chart(taskStatusCtx, {
+    type: "pie",
+    data: {
+      labels: [],
+      datasets: [],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      aspectRatio: 1,
+      plugins: {
+        title: {
+          display: false,
+          text: ""
+        }
+      },
+      layout: {
+        padding: {
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 25
+        }
+      }
+    }
+  });
+
+  $.ajax({
+    url: "{% url 'chart-filter-options' %}",
+    type: "GET",
+    dataType: "json",
+    success: (jsonResponse) => {
+      // Load all the options
+      jsonResponse.options.forEach(option => {
+        $("#year").append(new Option(option, option));
+      });
+      // Load data for the first option
+      loadAllCharts($("#year").children().first().val());
+    },
+    error: () => console.log("Failed to fetch chart filter options!")
+  });
+
+
+  $("#filterForm").on("submit", (event) => {
+    event.preventDefault();
+
+    const year = $("#year").val();
+    loadAllCharts(year)
+  });
+
+  function loadChart(chart, endpoint) {
+    $.ajax({
+      url: endpoint,
+      type: "GET",
+      dataType: "json",
+      success: (jsonResponse) => {
+        // Extract data from the response
+        const title = jsonResponse.title;
+        const labels = jsonResponse.data.labels;
+        const datasets = jsonResponse.data.datasets;
+
+
+        // Reset the current chart
+        chart.data.datasets = [];
+        chart.data.labels = [];
+
+        // Load new data into the chart
+        chart.options.plugins.title.text = title;
+        chart.options.plugins.title.display = true;
+        chart.data.labels = labels;
+        datasets.forEach(dataset => {
+          chart.data.datasets.push(dataset);
+        });
+        chart.update();
+      },
+      error: () => console.log("Failed to fetch chart data from " + endpoint + "!")
+    });
+  }
+
+  function loadAllCharts(year, user_group) {
+    yearInt = parseInt(year);
+    loadChart(dealsChart, `{% url 'chart-deals' year=0 %}`.replace('0', yearInt));
+    loadChart(averageDealAmountChart, `{% url 'average-deal' year=0 %}`.replace('0', yearInt));
+    loadChart(dealStatusChart, `{% url 'total-deal-status-chart' year=0 %}`.replace('0', yearInt));
+    loadChart(taskStatusChart, `{% url 'total-task-status-chart' year=0 %}`.replace('0', yearInt));
+    loadChart(allCustomerChart, `{% url 'allCustomers' %}`);
+    loadChart(customersRegisteredChart, `{% url 'customersRegistered' year=0 %}`.replace('0', yearInt));
+  }
+
+  });
+</script>
+{% endblock %}

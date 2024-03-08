@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<main>
+    <div class="container-fluid px-4">
+        <h1 class="mt-4">Customers</h1>
+        {% if user.groups.all.0.name == 'normal' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                All customers
+            </div>
+            <div class="card-body">                
+                <table id="datatablesSimple">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Arrived Date</th>
+                            <th>Deal Won</th>
+                            <th>More Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.customer_name }}</td>
+                            <td>{{ customer.customer_company }}</td>
+                            <td>{{ customer.arrived_date }}</td>
+                            <td>{{ customer.deal_won }}</td>
+                            <td><a class="btn btn-info" href="{% url 'customerDetail' pk=customer.pk %}" role="button">Info</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>                
+            </div>
+        </div>
+        {% endif %}
+        {% if user.groups.all.0.name == 'manager' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Pending Deals
+            </div>
+            <div class="card-body">                
+                <table id="datatablesSimple">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Deal Won</th>
+                            <th>Deal Assigned</th>
+                            <th>More Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customerDealNotassigned %}
+                        <tr>
+                            <td>{{ customer.customer_name }}</td>
+                            <td>{{ customer.customer_company }}</td>
+                            <td>{{ customer.deal_won }}</td>
+                            <td>{{ customer.deal_assigned }}</td>
+                            <td><a class="btn btn-info" href="{% url 'customerDetail' pk=customer.pk %}" role="button">Info</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>                
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                All customers
+            </div>
+            <div class="card-body">                
+                <table id="datatablesSimpleC">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Deal Won</th>
+                            <th>Deal Assigned</th>
+                            <th>More Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.customer_name }}</td>
+                            <td>{{ customer.customer_company }}</td>
+                            <td>{{ customer.deal_won }}</td>
+                            <td>{{ customer.deal_assigned }}</td>
+                            <td><a class="btn btn-info" href="{% url 'customerDetail' pk=customer.pk %}" role="button">Info</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>                
+            </div>
+        </div>
+        {% endif %}
+        {% if user.is_authenticated and user.is_superuser %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                All customers
+            </div>
+            <div class="card-body">                
+                <table id="datatablesSimpleC">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Deal Won</th>
+                            <th>Deal Assigned</th>
+                            <th>More Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.customer_name }}</td>
+                            <td>{{ customer.customer_company }}</td>
+                            <td>{{ customer.deal_won }}</td>
+                            <td>{{ customer.deal_assigned }}</td>
+                            <td><a class="btn btn-info" href="{% url 'customerDetail' pk=customer.pk %}" role="button">Info</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>                
+            </div>
+        </div>
+        {% endif %}    
+    </div>
+</main>
+{% endblock %}
