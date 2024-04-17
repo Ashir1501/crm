@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, date, time, timedelta
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 # Create your views here.
 
@@ -154,28 +156,33 @@ def dtf(request,pk):
     }
     return render(request,'deal_task.html',context)
 
-
+@csrf_exempt
 def updateDealStatus(request,pk):
-    deal = get_object_or_404(Deal,pk=pk)
-    if request.method == 'POST':
+    print(161)
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        print('inside deal up',163)
+        deal = get_object_or_404(Deal,pk=pk)
         deal.deal_status = request.POST.get('update_deal_status')
         deal.save()
-    return redirect('dtf',deal.pk)
+        response_data={
+            'success':True,
+        }
+        return JsonResponse(response_data)
+    else:
+        return JsonResponse({'error':'Bad Request'})
 
-
+@csrf_exempt
 def updateTaskStatus(request,pk):
-    task = get_object_or_404(Task,pk=pk)
-    dealid = task.task_relatedToDeal.pk
-    deal = get_object_or_404(Deal,pk=dealid)
-    context={
-        'task':task,
-        'deal':deal
-    }
-    if request.method == 'POST':
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        task = get_object_or_404(Task,pk=pk)
         task.task_status = request.POST.get('update_task_status')
         task.save()
-        return redirect('dtf',deal.pk)
-    return render(request,'update_task_status.html',context)
+        response_data={
+            'success':True,
+        }
+        return JsonResponse(response_data)
+    else:
+        return JsonResponse({'error':'Bad Request'})
 
 
 def delete_task(request, pk):

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<main">
+<main>
     <div class="container-fluid px-4">
         {% if messages %}
         <div class="container mt-3">
@@ -29,32 +29,30 @@
             </div>
             <div class="row">
                 <div class="col-md-6 bg-primary text-black p-3">Status</div>
-                <div class="col-md-6 bg-dark text-white p-3"><span style="display: inline-block; margin-right: 2%;">{{ deal.deal_status }}</span> <a class="btn btn-info"
-                        onclick="updateDeal()" href="#id_update_deal_status" role="button">Update</a></div>
+                <div class="col-md-6 bg-dark text-white p-3">
+                    <span style="display: inline-block; margin-right: 2%;">{{ deal.deal_status }}</span>
+                    <a class="btn btn-info" onclick="updateDeal()" href="#id_update_deal_status"
+                        role="button">Update</a>
+                </div>
             </div>
             <div class="container" style="display: none;" id="id_update_deal_status">
                 <div class="row justify-content-center">
                     <div class="col-lg-7">
-                        <div class="card shadow-lg border-0 rounded-lg mt-5">
+                        <div class="card shadow-lg border-0 rounded-lg mt-5 mb-3">
                             <div class="card-header">
                                 <h3 class="text-center font-weight-light my-4">Update Deal Status</h3>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{% url 'udealstatus' pk=deal.pk %}">
-                                    {% csrf_token %}
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
-                                                <select name="update_deal_status">
-                                                    <option value="Open">Open</option>
-                                                    <option value="Lost">Lost</option>
-                                                    <option value="Closed">Closed</option>
-                                                </select>
-                                            </button>
-                                            <button type="submit" class="btn btn-primary btn-block">Update</button>
-                                        </div>
-                                    </div>
-                                </form>
+                                <label class="form-label" for="update_deal_status">Status Menu</label>
+                                <div id="dealStatusU">
+                                    <select class="form-select" name="update_deal_status"
+                                        id="update_deal_status">
+                                        <option value="Open">Open</option>
+                                        <option value="Lost">Lost</option>
+                                        <option value="Closed">Closed</option>
+                                    </select>
+                                    <button type="button" onclick="updateDealStatus('{{ deal.id }}')" class="btn btn-primary btn-block">Save changes</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -98,9 +96,49 @@
                             <td>{{ task.task_dueDate }}</td>
                             <td>{{ task.task_description }}</td>
                             <td>{{ task.task_status }}</td>
-                            <td><a class="btn btn-info" href="{% url 'utaskstatus' pk=task.pk %}" role="button">Update</a></td>
-                            <td><a href="{% url 'delete_task' pk=task.pk %}"><button class="btn btn-danger btn-block">Delete Task</button></a></td>
+                            <td>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#exampleModal-{{ forloop.counter0 }}">
+                                    Update
+                                </button>
+                            </td>
+                            <td><a href="{% url 'delete_task' pk=task.pk %}"><button
+                                        class="btn btn-danger btn-block">Delete Task</button></a></td>
                         </tr>
+                        <div class="modal fade" id="exampleModal-{{ forloop.counter0 }}" tabindex="-1"
+                            aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Task: {{ task.task_title }}
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close">
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label" for="update_task_status">Status Menu:</label>
+                                                <select class="form-select" id="update_task_status"
+                                                    name="update_task_status">
+                                                    <option value="Open">Open</option>
+                                                    <option value="Wait">Wait</option>
+                                                    <option value="Closed">Closed</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <button type="button" onclick="updateTask('{{ task.id }}')"
+                                            class="btn btn-primary">Save changes</button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -165,11 +203,65 @@
         <div style="display: inline-block;">
             <a href="#toggblock"><button onclick="Block()" class="btn btn-secondary btn-block">Add
                     Task</button></a>
-            <a href="{% url 'delete_deal' pk=deal.pk %}"><button class="btn btn-danger btn-block">Delete Deal</button></a>
+            <a href="{% url 'delete_deal' pk=deal.pk %}"><button class="btn btn-danger btn-block">Delete
+                    Deal</button></a>
         </div>
     </div>
 </main>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
+    function updateTask(taskpk) {
+        let selectedValue = $('#update_task_status').val();
+        $.ajax({
+            type: 'POST',
+            url: '/customer/updateTask/' + taskpk,
+            data: {
+                'update_task_status': selectedValue
+            },
+            success: function (response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Status Updated',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+
+                setTimeout(function () {
+                    location.reload();
+                }, 2000);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+    function updateDealStatus(dealpk) {
+        let selectedValue = $('#update_deal_status').val();
+    
+        $.ajax({
+            type: 'POST',
+            url: '/customer/updateDeal/' + dealpk,
+            data: {
+                'update_deal_status': selectedValue
+            },
+            success: function (response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Status Updated',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+
+                setTimeout(function () {
+                    location.reload();
+                }, 2000);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
     function Block() {
         let x = document.getElementById("toggblock");
         if (x.style.display === "none") {
