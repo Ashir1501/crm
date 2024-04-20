@@ -51,7 +51,8 @@
                                         <option value="Lost">Lost</option>
                                         <option value="Closed">Closed</option>
                                     </select>
-                                    <button type="button" onclick="updateDealStatus('{{ deal.id }}')" class="btn btn-primary btn-block">Save changes</button>
+                                    <button onclick="updateDealStatus('{{ deal.id }}')" class="btn btn-primary btn-block">Save changes</button>
+                                    <button onclick="updateDealClose()" class="btn btn-secondary btn-block">Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -102,8 +103,9 @@
                                     Update
                                 </button>
                             </td>
-                            <td><a href="{% url 'delete_task' pk=task.pk %}"><button
-                                        class="btn btn-danger btn-block">Delete Task</button></a></td>
+                            <td>
+                                <button type="button" class="btn btn-danger" onclick="deleteTaskfunc('{{ task.pk }}')">Delete Task</button>
+                            </td>
                         </tr>
                         <div class="modal fade" id="exampleModal-{{ forloop.counter0 }}" tabindex="-1"
                             aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -153,8 +155,7 @@
                             <h3 class="text-center font-weight-light my-4">Task</h3>
                         </div>
                         <div class="card-body">
-                            <form method="POST" action="{% url 'dealtask' pk=deal.pk %}" id="TaskForm">
-                                {% csrf_token %}
+                            <form method="POST" id="TaskForm">
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <p><label>Title</label></p>
@@ -173,7 +174,7 @@
                                     <div class="col-md-6">
                                         <p><label>Status</label></p>
                                         <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
-                                            <select name="task_status">
+                                            <select id="task_status" name="task_status">
                                                 <option value="Open">Open</option>
                                                 <option value="Wait">Wait</option>
                                                 <option value="Closed">Closed</option>
@@ -184,13 +185,13 @@
                                 <div class="form-floating mb-3">
                                     <div class="input-group">
                                         <span class="input-group-text">Description</span>
-                                        <textarea class="form-control" name="description"></textarea>
+                                        <textarea class="form-control" id="description" name="description"></textarea>
                                     </div>
                                 </div>
 
                                 <div class="mt-4 mb-0">
                                     <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary btn-block">Create</button>
+                                        <button type="button" class="btn btn-primary btn-block" onclick="createTaskFunc('{{ deal.pk }}')">Create</button>
                                     </div>
                                 </div>
                             </form>
@@ -262,6 +263,59 @@
             }
         });
     }
+    function createTaskFunc(dealpk){
+        let title = $('#title').val();
+        let task_status = $('#task_status').val();
+        let description = $('#description').val();
+        let duedate = $('#datetime').val();
+
+        $.ajax({
+            type: 'POST',
+            url: '/customer/dealTasks/' + dealpk,
+            data: {
+                'title': title,
+                'task_status': task_status,
+                'description': description,
+                'duedate': duedate
+            },
+            success: function (response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Task Created',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+
+                setTimeout(function () {
+                    location.reload();
+                }, 2000);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+    function deleteTaskfunc(taskpk){
+        $.ajax({
+            type: 'POST',
+            url: '/customer/deleteTask/'+taskpk,
+            success: function (response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Task Deleted',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+
+                setTimeout(function () {
+                    location.reload();
+                }, 2000);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
     function Block() {
         let x = document.getElementById("toggblock");
         if (x.style.display === "none") {
@@ -278,6 +332,11 @@
         } else {
             x.style.display = "none";
         }
+    }
+
+    function updateDealClose(){
+        let x = document.getElementById("id_update_deal_status")
+        x.style.display = "none";
     }
 </script>
 {% endblock %}

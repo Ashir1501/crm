@@ -118,6 +118,7 @@ def customerDetail(request, pk):
 
 
 @login_required(login_url='login')
+@csrf_exempt
 def dealAndTask(request,pk):
     deal = Deal.objects.get(pk=pk)
     tasks = Task.objects.filter(task_relatedToDeal = deal.pk)
@@ -125,7 +126,7 @@ def dealAndTask(request,pk):
         'deal':deal,
         'tasks':tasks
     }
-    if request.method == 'POST':
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         due_date_str = request.POST.get('duedate')
         due_date_obj = datetime.strptime(due_date_str, '%Y-%m-%d').date()
         if tasks.exists():
@@ -141,7 +142,7 @@ def dealAndTask(request,pk):
             post.task_relatedToDeal = deal
             post.taskCreatedByUser = request.user.username
             post.save()
-            return redirect('dtf',deal.pk)
+            return JsonResponse({'success':True})
         else:
             messages.error(request, 'Due Date must be between deal initialtion and close date and also greater than previous due date')
     return render(request,'deal_task.html',context)
@@ -158,9 +159,7 @@ def dtf(request,pk):
 
 @csrf_exempt
 def updateDealStatus(request,pk):
-    print(161)
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        print('inside deal up',163)
         deal = get_object_or_404(Deal,pk=pk)
         deal.deal_status = request.POST.get('update_deal_status')
         deal.save()
@@ -185,12 +184,17 @@ def updateTaskStatus(request,pk):
         return JsonResponse({'error':'Bad Request'})
 
 
+@csrf_exempt
 def delete_task(request, pk):
-    task = get_object_or_404(Task, pk=pk)
-    dealid = task.task_relatedToDeal.pk
-    deal = Deal.objects.get(pk=dealid)
-    task.delete()
-    return redirect('dtf',deal.pk)
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        task = get_object_or_404(Task, pk=pk)
+        task.delete()
+        response_data={
+            'success':True,
+        }
+        return JsonResponse(response_data)
+    else:
+        return JsonResponse({'error':'Bad Request'})
 
 
 def delete_deal(request, pk):

@@ -1,12 +1,10 @@
 #dealStatusU{
     display: flex;
 }
-
 #dealStatusU select{
-    width: 50%;
+    width: 40%;
 }
-
 #dealStatusU button{
-    width: 30%;
-    margin: auto;
+    width: 28%;
+    margin: 0 auto;
 }
