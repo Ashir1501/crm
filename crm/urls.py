@@ -19,7 +19,7 @@ from django.urls import path, include
 from userManagerApp.views import CustomLogoutView
 from django.conf.urls.static import static
 from django.conf import settings
-from core.admin import admin_statistics_view, admin_assigner_view, custom_login_admin_site
+from core.admin import admin_statistics_view, admin_assigner_view
 
 
 urlpatterns = [
@@ -27,7 +27,6 @@ urlpatterns = [
     path("admin/assigner/",admin.site.admin_view(admin_assigner_view),name="admin-assigner"),
     path('admin/logout/', CustomLogoutView.as_view()),
     path('admin/', admin.site.urls),
-    # path('admin/', custom_login_admin_site.urls),
     path('', include('userManagerApp.urls')),
     path('customer/', include('crmManagerApp.urls')),
 ]

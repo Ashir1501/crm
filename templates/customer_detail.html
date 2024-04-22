@@ -5,19 +5,6 @@
 
 <main>
     <div class="container-fluid px-4">
-        {% if messages %}
-        <div class="container mt-3">
-            {% for message in messages %}
-            {% if message.tags == 'error' %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>{{ message }}</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                </button>
-            </div>
-            {% endif %}
-            {% endfor %}
-        </div>
-        {% endif %}
         <h1 class="mt-4">Customer Detail</h1>
 
         <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
@@ -128,8 +115,7 @@
                             <h3 class="text-center font-weight-light my-4">Add interaction</h3>
                         </div>
                         <div class="card-body">
-                            <form method="POST" action="{% url 'customerDetail' pk=customer_detail.pk %}"
-                                id="InteractionForm">
+                            <form method="POST" id="InteractionForm">
                                 {% csrf_token %}
                                 <div class="row mb-3">
                                     <div class="col-md-6">
@@ -152,7 +138,7 @@
                                 <div class="form-floating mb-3">
                                     <div class="input-group">
                                         <span class="input-group-text">Notes</span>
-                                        <textarea class="form-control" name="notes"></textarea>
+                                        <textarea class="form-control" id="notes" name="notes"></textarea>
                                     </div>
                                 </div>
 
@@ -169,7 +155,7 @@
         </div>
 
         <div style="display: inline-block;">
-            <a href="#toggblockInteraction"><button onclick="BlockInteraction()" class="btn btn-secondary btn-block">Add
+            <a><button id="buttonblockInteraction" onclick="BlockInteraction()" class="btn btn-secondary btn-block">Add
                     Interaction</button></a>
         </div>
         {% endif %}
@@ -183,7 +169,7 @@
                             <h3 class="text-center font-weight-light my-4">Create Deal</h3>
                         </div>
                         <div class="card-body">
-                            <form method="POST" action="{% url 'customerDetail' pk=customer_detail.pk %}" id="DealForm">
+                            <form method="POST" id="DealForm">
                                 {% csrf_token %}
                                 <div class="row mb-3">
                                     <div class="col-md-6">
@@ -236,19 +222,17 @@
         </div>
 
         <div style="display: inline-block;">
-            <a href="#toggblockDeal"><button onclick="BlockDeal()" class="btn btn-secondary btn-block">Create Deal</button></a>
+            <a><button id="buttonblockDeal" onclick="BlockDeal()" class="btn btn-secondary btn-block">Create
+                    Deal</button></a>
         </div>
         {% endif %}
 
-        {% if user.is_superuser %}
-        <div style="display: inline-block;">
-            <a href="{% url 'delete_customer' pk=customer_detail.pk %}"><button class="btn btn-danger btn-block">Delete Customer</button></a>
-        </div>
-        {% endif %}
     </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
+
     function BlockInteraction() {
         let x = document.getElementById("toggblockInteraction");
         if (x.style.display === "none") {
@@ -265,6 +249,145 @@
             x.style.display = "none";
         }
     }
+
+    let interactionElement = document.getElementById('buttonblockInteraction')
+    if (interactionElement) {
+        document.getElementById('buttonblockInteraction').addEventListener('click', function (event) {
+            let targetElement = document.getElementById('toggblockInteraction');
+            targetElement.scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    let dealElement = document.getElementById('buttonblockDeal')
+    if (dealElement) {
+        document.getElementById('buttonblockDeal').addEventListener('click', function (event) {
+            let targetElement = document.getElementById('toggblockDeal');
+            targetElement.scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let interactionFrmElement = document.getElementById("InteractionForm")
+        if (interactionFrmElement) {
+            // Add event listener to the form submission
+            document.getElementById("InteractionForm").addEventListener("submit", function (event) {
+                // Check if the form is valid
+                if (!this.checkValidity()) {
+                    // If the form is not valid, prevent the default form submission
+                    event.preventDefault();
+                    // Trigger HTML5 form validation to display validation messages
+                    this.reportValidity();
+                } else {
+                    // If the form is valid, proceed with AJAX submission
+                    event.preventDefault(); // Prevent default submission
+                    let interacted_mode = $('#id_interacted_mode').val();
+                    let datetime = $('#datetime').val();
+                    let notes = $('#notes').val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/customer/detail/' + "{{ customer_detail.pk }}",
+                        data: {
+                            'interacted_mode': interacted_mode,
+                            'datetime': datetime,
+                            'notes': notes,
+                        },
+                        success: function (response) {
+                            if (response.error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops..',
+                                    text: 'Interacted date and time must be greater than or equal to arrived date and previous interacted date.',
+                                    showCloseButton: true
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Interaction Added',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+
+                                setTimeout(function () {
+                                    location.reload();
+                                }, 2000);
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error)
+                        }
+                    });
+                }
+
+
+            });
+        }
+
+        let DealFrmElement = document.getElementById("DealForm")
+        if(DealFrmElement){
+            // Add event listener to the form submission
+            document.getElementById("DealForm").addEventListener("submit", function (event){
+                // Check if the form is valid
+                if (!this.checkValidity()) {
+                    // If the form is not valid, prevent the default form submission
+                    event.preventDefault();
+                    // Trigger HTML5 form validation to display validation messages
+                    this.reportValidity();
+                }else{
+                    // If the form is valid, proceed with AJAX submission
+                    event.preventDefault(); // Prevent default submission
+                    let initiationDate = $('#initiationDate').val();
+                    let closeDate = $('#closeDate').val();
+                    let title = $('#title').val();
+                    let dealstatus = $('#id_deal_status').val();
+                    let amount = $('#amount').val();
+            
+                    $.ajax({
+                        type: 'POST',
+                        url: '/customer/detail/' + "{{ customer_detail.pk }}",
+                        data: {
+                            'initiationDate': initiationDate,
+                            'closeDate': closeDate,
+                            'title': title,
+                            'dealstatus': dealstatus,
+                            'amount':amount
+                        },
+                        success: function (response) {
+                            if(response.error){
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops..',
+                                    text: 'Initiation date must be >= to arrived date and close date at least should be > initiation date by 6 days.',
+                                    showCloseButton: true
+                                });
+                            }else{
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deal Created',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+                
+                                setTimeout(function () {
+                                    location.reload();
+                                }, 2000);
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error)
+                        }
+                    });
+                }
+
+            });
+
+        }
+
+    });
 </script>
 
 {% endblock %}

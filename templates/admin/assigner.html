@@ -6,6 +6,9 @@
 <main>
     <div class="container">
         <div class="row justify-content-center">
+            {% block messages %}
+                {# This block is empty to prevent the default Django admin alert from being displayed #}
+            {% endblock %}
             {% if messages %}
             <div class="container mt-3">
                 {% for message in messages %}

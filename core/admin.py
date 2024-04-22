@@ -12,10 +12,6 @@ from datetime import date
 
 # Register your models here.
 
-class CustomLoginAdminSite(admin.AdminSite):
-    login_template = 'login.html'
-custom_login_admin_site = CustomLoginAdminSite(name='custom_login_admin')
-
 @staff_member_required
 def admin_statistics_view(request):
     customers = Customer.objects.filter(deal_won=True).count()
@@ -86,7 +82,7 @@ class CustomAdminSite(admin.AdminSite):
                     {
                         "name":"Statistics",
                         "object_name":"statistics",
-                        "admin_url":"statistics/",
+                        "admin_url":"/admin/statistics/",
                         "view_only":True,
                     }
                 ],
@@ -98,7 +94,7 @@ class CustomAdminSite(admin.AdminSite):
                     {
                         "name":"Assigner",
                         "object_name":"assigner",
-                        "admin_url":"assigner/",
+                        "admin_url":"/admin/assigner/",
                     }
                 ],
             }
@@ -108,7 +104,7 @@ class CustomAdminSite(admin.AdminSite):
     def get_urls(self):
         urls = super().get_urls()
         urls += [
-            path("statistics/",admin_statistics_view, name="admin-statistics"),
-            path("assigner/",admin_assigner_view, name="admin-assigner"),
+            path("/admin/statistics/",admin_statistics_view, name="admin-statistics"),
+            path("/admin/assigner/",admin_assigner_view, name="admin-assigner"),
         ]
         return urls

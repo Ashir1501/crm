@@ -3,19 +3,6 @@
 {% block content %}
 <main>
     <div class="container-fluid px-4">
-        {% if messages %}
-        <div class="container mt-3">
-            {% for message in messages %}
-            {% if message.tags == 'error' %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>{{ message }}</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                </button>
-            </div>
-            {% endif %}
-            {% endfor %}
-        </div>
-        {% endif %}
         <h1 class="mt-4">Deal & Tasks</h1>
 
         <div class="container-fluid mt-3" style="width: 80%; margin: auto;">
@@ -31,8 +18,7 @@
                 <div class="col-md-6 bg-primary text-black p-3">Status</div>
                 <div class="col-md-6 bg-dark text-white p-3">
                     <span style="display: inline-block; margin-right: 2%;">{{ deal.deal_status }}</span>
-                    <a class="btn btn-info" onclick="updateDeal()" href="#id_update_deal_status"
-                        role="button">Update</a>
+                    <a id='anchorDealStatus' class="btn btn-info" onclick="updateDeal()" role="button">Update</a>
                 </div>
             </div>
             <div class="container" style="display: none;" id="id_update_deal_status">
@@ -45,14 +31,15 @@
                             <div class="card-body">
                                 <label class="form-label" for="update_deal_status">Status Menu</label>
                                 <div id="dealStatusU">
-                                    <select class="form-select" name="update_deal_status"
-                                        id="update_deal_status">
+                                    <select class="form-select" name="update_deal_status" id="update_deal_status">
                                         <option value="Open">Open</option>
                                         <option value="Lost">Lost</option>
                                         <option value="Closed">Closed</option>
                                     </select>
-                                    <button onclick="updateDealStatus('{{ deal.id }}')" class="btn btn-primary btn-block">Save changes</button>
-                                    <button onclick="updateDealClose()" class="btn btn-secondary btn-block">Cancel</button>
+                                    <button onclick="updateDealStatus('{{ deal.id }}')"
+                                        class="btn btn-primary btn-block">Save changes</button>
+                                    <button onclick="updateDealClose()"
+                                        class="btn btn-secondary btn-block">Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -104,7 +91,8 @@
                                 </button>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-danger" onclick="deleteTaskfunc('{{ task.pk }}')">Delete Task</button>
+                                <button type="button" class="btn btn-danger"
+                                    onclick="deleteTaskfunc('{{ task.pk }}')">Delete Task</button>
                             </td>
                         </tr>
                         <div class="modal fade" id="exampleModal-{{ forloop.counter0 }}" tabindex="-1"
@@ -147,7 +135,7 @@
             </div>
         </div>
 
-        <div class="container" id="toggblock" style="display: none;">
+        <div class="container" id="TaskBlock" style="display: none;">
             <div class="row justify-content-center">
                 <div class="col-lg-7">
                     <div class="card shadow-lg border-0 rounded-lg mt-5">
@@ -156,6 +144,7 @@
                         </div>
                         <div class="card-body">
                             <form method="POST" id="TaskForm">
+                                {% csrf_token %}
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <p><label>Title</label></p>
@@ -191,7 +180,7 @@
 
                                 <div class="mt-4 mb-0">
                                     <div class="d-grid">
-                                        <button type="button" class="btn btn-primary btn-block" onclick="createTaskFunc('{{ deal.pk }}')">Create</button>
+                                        <button type="submit" class="btn btn-primary btn-block">Create</button>
                                     </div>
                                 </div>
                             </form>
@@ -202,14 +191,13 @@
         </div>
 
         <div style="display: inline-block;">
-            <a href="#toggblock"><button onclick="Block()" class="btn btn-secondary btn-block">Add
+            <a><button id="anchorTaskStatus" onclick="Block()" class="btn btn-secondary btn-block">Add
                     Task</button></a>
             <a href="{% url 'delete_deal' pk=deal.pk %}"><button class="btn btn-danger btn-block">Delete
                     Deal</button></a>
         </div>
     </div>
 </main>
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
     function updateTask(taskpk) {
@@ -239,7 +227,7 @@
     }
     function updateDealStatus(dealpk) {
         let selectedValue = $('#update_deal_status').val();
-    
+
         $.ajax({
             type: 'POST',
             url: '/customer/updateDeal/' + dealpk,
@@ -263,42 +251,70 @@
             }
         });
     }
-    function createTaskFunc(dealpk){
-        let title = $('#title').val();
-        let task_status = $('#task_status').val();
-        let description = $('#description').val();
-        let duedate = $('#datetime').val();
 
+    document.addEventListener("DOMContentLoaded", function () {
+        let TaskFrmElement = document.getElementById("TaskForm")
+        if (TaskFrmElement) {
+            // Add event listener to the form submission
+            document.getElementById("TaskForm").addEventListener("submit", function (event) {
+                // Check if the form is valid
+                if (!this.checkValidity()) {
+                    // If the form is not valid, prevent the default form submission
+                    event.preventDefault();
+                    // Trigger HTML5 form validation to display validation messages
+                    this.reportValidity();
+                } else {
+                    // If the form is valid, proceed with AJAX submission
+                    event.preventDefault(); // Prevent default submission
+                    let title = $('#title').val();
+                    let task_status = $('#task_status').val();
+                    let description = $('#description').val();
+                    let duedate = $('#datetime').val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/customer/dealTasks/' + "{{ deal.pk }}",
+                        data: {
+                            'title': title,
+                            'task_status': task_status,
+                            'description': description,
+                            'duedate': duedate
+                        },
+                        success: function (response) {
+                            if (response.error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops..',
+                                    text: 'Due Date must be between deal initialtion and close date and also greater than previous due date',
+                                    showCloseButton: true
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Task Created',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+
+                                setTimeout(function () {
+                                    location.reload();
+                                }, 2000);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log(status, error);
+                        }
+                    });
+
+                }
+            });
+        }
+    });
+
+    function deleteTaskfunc(taskpk) {
         $.ajax({
             type: 'POST',
-            url: '/customer/dealTasks/' + dealpk,
-            data: {
-                'title': title,
-                'task_status': task_status,
-                'description': description,
-                'duedate': duedate
-            },
-            success: function (response) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Task Created',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-
-                setTimeout(function () {
-                    location.reload();
-                }, 2000);
-            },
-            error: function (error) {
-                console.log(error);
-            }
-        });
-    }
-    function deleteTaskfunc(taskpk){
-        $.ajax({
-            type: 'POST',
-            url: '/customer/deleteTask/'+taskpk,
+            url: '/customer/deleteTask/' + taskpk,
             success: function (response) {
                 Swal.fire({
                     icon: 'success',
@@ -317,7 +333,7 @@
         });
     }
     function Block() {
-        let x = document.getElementById("toggblock");
+        let x = document.getElementById("TaskBlock");
         if (x.style.display === "none") {
             x.style.display = "block";
         } else {
@@ -334,9 +350,23 @@
         }
     }
 
-    function updateDealClose(){
+    function updateDealClose() {
         let x = document.getElementById("id_update_deal_status")
         x.style.display = "none";
     }
+
+    document.getElementById('anchorDealStatus').addEventListener('click', function (event) {
+        let targetElement = document.getElementById('id_update_deal_status');
+        targetElement.scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+
+    document.getElementById('anchorTaskStatus').addEventListener('click', function (event) {
+        let targetElement = document.getElementById('TaskBlock');
+        targetElement.scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
 </script>
 {% endblock %}

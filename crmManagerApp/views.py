@@ -46,8 +46,9 @@ def customerList(request):
 
 
 @login_required(login_url='login')
+@csrf_exempt
 def customerDetail(request, pk):
-    customer_detail = Customer.objects.get(pk=pk)
+    customer_detail = get_object_or_404(Customer,pk=pk)
     interactions = Interaction.objects.filter(interacted_customer = customer_detail.id)
     deal = Deal.objects.filter(deal_withCustomer = customer_detail.id)
     context ={
@@ -72,7 +73,7 @@ def customerDetail(request, pk):
     else:
         user_group = request.user.groups.values_list('name', flat=True)[0]
     if user_group == 'normal':
-        if request.method == 'POST':
+        if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
             if request.POST.get('interacted_mode') and request.POST.get('datetime'):
                 interacted_date_time_str = request.POST.get('datetime')
                 #create a datetime object and convert it to aware from naive
@@ -80,8 +81,7 @@ def customerDetail(request, pk):
                 interacted_date_time = timezone.localtime(interacted_date_time)
             
                 if (interacted_date_time < arrived_date_time) or (interacted_date_time <= latest_interaction):
-                    messages.error(request, "Interacted date and time must be greater than or equal to arrived date and previous interacted date.")
-                    return render(request,'customer_detail.html',context)
+                    return JsonResponse({'error':True})
                 else:
                     post = Interaction()
                     post.interacted_mode = request.POST.get('interacted_mode')
@@ -90,8 +90,9 @@ def customerDetail(request, pk):
                     post.interacted_customer = customer_detail
                     post.intrAddedByUser = request.user.username
                     post.save()
+                    return JsonResponse({'success':True})
     if user_group == 'manager' or request.user.is_superuser:
-        if request.method == 'POST':
+        if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
             initiation_date_str = request.POST.get('initiationDate')
             closedate_str = request.POST.get('closeDate')
 
@@ -99,8 +100,7 @@ def customerDetail(request, pk):
             closedate_obj = datetime.strptime(closedate_str, '%Y-%m-%d').date()
 
             if(initiation_date_obj < arrived_date) or (closedate_obj < initiation_date_obj+timedelta(days=6)):
-                messages.error(request, "Initiation date must be >= to arrived date and close date at least should be > initiation date by 6 days.")
-                return render(request,'customer_detail.html',context)
+                return JsonResponse({'error':True})
             else:
                 post = Deal()
                 post.deal_title = request.POST.get('title')
@@ -113,14 +113,14 @@ def customerDetail(request, pk):
                 customer_detail.deal_assigned = True
                 customer_detail.save()
                 post.save()
-                messages.success(request,"Deal created successfully")
+                return JsonResponse({'success':True})
     return render(request,'customer_detail.html',context)
 
 
 @login_required(login_url='login')
 @csrf_exempt
 def dealAndTask(request,pk):
-    deal = Deal.objects.get(pk=pk)
+    deal = get_object_or_404(Deal,pk=pk)
     tasks = Task.objects.filter(task_relatedToDeal = deal.pk)
     context={
         'deal':deal,
@@ -144,17 +144,7 @@ def dealAndTask(request,pk):
             post.save()
             return JsonResponse({'success':True})
         else:
-            messages.error(request, 'Due Date must be between deal initialtion and close date and also greater than previous due date')
-    return render(request,'deal_task.html',context)
-
-@login_required(login_url='login')
-def dtf(request,pk):
-    deal = get_object_or_404(Deal,pk=pk)
-    tasks = Task.objects.filter(task_relatedToDeal = deal.pk)
-    context={
-        'deal':deal,
-        'tasks':tasks
-    }
+            return JsonResponse({'error':True})
     return render(request,'deal_task.html',context)
 
 @csrf_exempt
@@ -198,13 +188,9 @@ def delete_task(request, pk):
 
 
 def delete_deal(request, pk):
-    deal = Deal.objects.get(pk=pk)
+    deal = get_object_or_404(Deal,pk=pk)
     customer = Customer.objects.get(pk = deal.deal_withCustomer.pk)
     deal.delete()
     return redirect('customerDetail',customer.pk)
 
-def delete_customer(request, pk):
-    customer = Customer.objects.get(pk=pk)
-    customer.delete()
-    return redirect('listCustomer')
 

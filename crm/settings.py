@@ -33,7 +33,6 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "core.apps.CustomAdminConfig", 
-    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -42,7 +41,6 @@ INSTALLED_APPS = [
     'crmManagerApp',
     'userManagerApp',
     'chart',
-    # 'core',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'crmManagerApp.middleware.NoCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'crm.urls'
